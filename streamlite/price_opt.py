@@ -89,8 +89,8 @@ if st.checkbox('Chart data', key='show'):
 
     try:
         line_chart = alt.Chart(df).mark_line().encode(
-            x='ds:T',
-            y="y:Q",
+            x=alt.X('ds:T', title='Date'),
+            y=alt.Y('y:Q', title='Target'),
             tooltip=['ds:T', 'y']
         ).properties(title="Time series preview").interactive()
         st.altair_chart(line_chart, use_container_width=True)
@@ -110,7 +110,7 @@ with st.form("config"):
 
                 with st.container():
                     selected_trend = st.selectbox(
-                        label="Select trend", options=trend_components)
+                        label="Select trend", options=trend_components,index=None)
 
                 trend = ''  # Initialize the trend variable
 
@@ -125,7 +125,7 @@ with st.form("config"):
 
             
             with st.expander("Horizon"):
-                periods_input = st.number_input('Select how many future periods (days) to forecast.',
+                periods_input = st.number_input(f'Select how many future periods {trend} to forecast.', 
                                                 min_value=1, max_value=366, value=90)
 
             with st.expander('Holidays'):
@@ -156,6 +156,13 @@ with st.form("config"):
                     if selected_country == 'Germany':
                         country_code = 'BR'
 
-                
+            with st.expander('Train'):
+                train = df.copy()  # You need to call the copy() method to create a copy of the DataFrame.
+                if train is not None and not train.empty:
+                    st.write(list(train.columns))
+                else:
+                    st.write("The 'train' DataFrame is empty or None.")
+
+
                 
             
