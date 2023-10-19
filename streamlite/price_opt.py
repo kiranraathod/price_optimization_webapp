@@ -2,11 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
-import base64
-import itertools
 import matplotlib.pyplot as plt
 # To build our model
-import tqdm as notebook_tqdm
 from prophet import Prophet
 from prophet.plot import plot_plotly, plot_components_plotly
 
@@ -18,6 +15,7 @@ def load_csv(input_metric):
     df_input = pd.DataFrame()
     df_input = pd.read_csv(input_metric, sep=',', engine='python', encoding='utf-8',
                            parse_dates=True)
+    df_input['date'] = pd.to_datetime(df_input['date'])                           
     return df_input.copy()
 
 def prep_data(df):
@@ -60,22 +58,115 @@ if input:
         st.write(list(df.columns))
         columns = list(df.columns)
 
-        col1, col2 = st.columns(2)
-        with col1:
-            date_col = st.selectbox(
-                "Select date column",
-                options=columns,
-                key="date"
-            )
-        with col2:
-            metric_col = st.selectbox(
-                "Select values column",
-                options=columns,
-                key="values"
-            )
+        #df = prep_data(df)
+        #output = 0
 
-        df = prep_data(df)
-        output = 0
+#---- First part Jesus code ----
+"""
+     In this part we are defining all the functions that would be used in the load_model() where is going to call 
+    the Facebook's Prophet Algorithm, make the propert transformations and plot its own chart function to demonstrate the results
+
+"""
+@st.cache_data  # 👈 Add the caching decorator
+def transform_1():
+    # Create a copy of the original DataFrame 'df' and store it in 'train'
+    train = df.copy()
+    
+    # Convert the 'date' column in the 'train' DataFrame to datetime format
+    # Please can you check your code if this step has been done, so you can drop this line of code because your already did it.
+    train['date'] = pd.to_datetime(train['date'])
+
+    # Rename the columns in the 'train' DataFrame
+    train = train.rename(columns={'quantity_sold': 'y', 'date': 'ds'})
+
+    return train
+
+def transform_2():
+    # Create a copy of the original DataFrame 'df' and store it in 'train'
+    train = df.copy()
+
+    # Create a new DataFrame 'fd' by selecting specific columns from 'train'
+    fd = train[['date', 'quantity_sold'] + selected_columns]
+
+    return fd
+
+def preprocess_data(df):
+    # With this function we are going to fill the future dates witht our latest value of the other features. (Those features are required to predict the target value)
+    df = df[['ds'] + selected_columns]
+    df.fillna(method='ffill', inplace=True)
+    return df
+
+def create_future_dataframe(model, periods=4, freq='W'):
+    # Creating a dataframe with the new dates to predict. Depends of the user input. They have to select the period and the frequency of the new dates.
+    future_data = model.make_future_dataframe(periods=periods, freq=freq)
+    future_data['ds'] = future_data['ds'].dt.strftime('%Y-%m-%d')
+    return future_data
+
+# Creating a list of countries that Prophet know their holidays 
+country_mapping = {
+    'United States': 'US',
+    'United Kingdom': 'GB',
+    'Germany': 'DE',
+    'France': 'FR',
+    'Brazil': 'BR'}
+
+# Creating a dictionary of the two options that users will have so they can predict daily or weekly target value
+seasonality_configs = {
+        "Weekly": {"name": "weekly", "period": 7, "fourier_order": 3},
+        "Monthly": {"name": "monthly", "period": 30.5, "fourier_order": 5}
+    }
+
+@st.cache_data  # 👈 Add the caching decorator
+def load_model(seasonality_config, selected_columns, future_periods, future_freq, selected_country):
+    # Instantiate Prophet
+    model_new = Prophet()
+    
+    # Add customizable seasonality
+    model_new.add_seasonality(
+        name=seasonality_config['name'],
+        period=seasonality_config['period'],
+        fourier_order=seasonality_config['fourier_order']
+    )
+
+    # Add selected columns as regressors
+    for column in selected_columns:
+        model_new.add_regressor(column)
+
+    # Add selected holidays for the country
+    if selected_country:
+        two_letter_code = country_mapping.get(selected_country)
+        if two_letter_code:
+            model_new.add_country_holidays(country_name=two_letter_code)
+
+    # Fit the model to the training data
+    model_new.fit(train)
+
+    # Create a future DataFrame for 4 weeks
+    future_data = create_future_dataframe(model_new, future_periods, future_freq)
+    
+    # Bring back the base data set to concatenate with the future dataset
+    fd = transform_2()
+    
+    # Let's merge our future data with our features
+    combined_df = pd.concat([fd, future_data], axis=1)
+    combined_df = preprocess_data(combined_df)
+
+    # Predict on the 'future' dataset
+    forecast_data = model_new.predict(combined_df)
+    
+    fig = model_new.plot(forecast_data)
+    
+    # Customize x-label and y-label
+    plt.xlabel('Date')
+    plt.ylabel('Target value')
+    plt.grid(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.gca().spines['top'].set_visible(False)
+
+    return fig
+
+#----End first part Jesus Code-----
+
 
 if st.checkbox('Chart data', key='show'):
     with st.spinner('Plotting data..'):
@@ -96,85 +187,40 @@ if st.checkbox('Chart data', key='show'):
         st.altair_chart(line_chart, use_container_width=True)
 
     except Exception as e:
-        st.line_chart(df['y'], use_container_width=True, height=300)
+        st.line_chart(df['quantity_sold'], use_container_width=True, height=300)
         
-        
+# ----- Second part Jesus code -----        
 st.subheader("2.Parameters configuration ")
+# Main Streamlit app code
+if __name__ == '__main__':
+        st.title("Prophet Time Series Forecasting App")
 
-with st.form("config"):
+        # Selectbox to choose columns
+        selected_columns = st.multiselect("Select Regressor Columns", df.columns[3:])  # Exclude 'date' from options
 
-        with st.container():
-            
-            with st.expander("Trend components"):
-                trend_components = ['Daily', 'Weekly', 'Monthly', 'Yearly']
+        # Create a train dataset
+        train = transform_1()
 
-                with st.container():
-                    selected_trend = st.selectbox(
-                        label="Select trend", options=trend_components,index=None)
+        # Create a second dataset to combined witht the future
+        fd = transform_2()
 
-                trend = ''  # Initialize the trend variable
+        # Dropdown to select the country for holidays
+        selected_country = st.selectbox("Select Country for Holidays", list(country_mapping.keys()))
 
-                if selected_trend == 'Daily':
-                    trend = 'daily'
-                elif selected_trend == 'Weekly':
-                    trend = 'weekly'
-                elif selected_trend == 'Monthly':
-                    trend = 'monthly'
-                elif selected_trend == 'Yearly':
-                    trend = 'yearly'
+        # Dropdown to select seasonality
+        seasonality_choice = st.radio("Choose Seasonality", ["Weekly", "Monthly"])
 
-            
-            with st.expander("Horizon"):
-                periods_input = st.number_input(f'Select how many future periods {trend} to forecast.', 
-                                                min_value=1, max_value=366, value=90)
+        # Frequency for future predictions
+        future_freq_options = ['D', 'W']  # Daily, Weekly, Monthly
+        future_freq = st.selectbox("Frequency for Future Predictions Daily, Weekly", future_freq_options)
 
-            with st.expander('Holidays'):
-                countries = ['Country name', 'Italy', 'Spain', 'United States', 'France', 'Germany', 'Ukraine']
+        # Number of periods for future predictions
+        future_periods = st.number_input("Number of Future Periods", value=2)
 
-                with st.container():
-                    selected_country = st.selectbox(
-                        label="Select country", options=countries)
+        # Load the model
+        fig = load_model(seasonality_configs[seasonality_choice], selected_columns, future_periods, future_freq, selected_country)
+        
+        # Plot the forecast
+        st.pyplot(fig)
 
-                    # You should assign the country code to a variable.
-                    country_code = ''
-                    
-                    if selected_country == 'Italy':
-                        country_code = 'IT'
-                        
-                    elif selected_country == 'Spain':
-                        country_code = 'ES'
-                        
-                    elif selected_country == 'United States':
-                        country_code = 'US'
-                    
-                    elif selected_country == 'France':
-                        country_code = 'FR'
-                        
-                    elif selected_country == 'Germany':
-                        country_code = 'DE'
-
-                    if selected_country == 'Germany':
-                        country_code = 'BR'
-
-            with st.expander('Train'):
-                train = df.copy()  # You need to call the copy() method to create a copy of the DataFrame.
-                if train is not None and not train.empty:
-                    st.write(list(train.columns))
-                else:
-                    st.write("The 'train' DataFrame is empty or None.")
-                    
-                # Convert the 'date' column in the 'train' DataFrame to datetime format
-                train['date'] = pd.to_datetime(train['date'])
-
-                # Create a new DataFrame 'fd' by selecting specific columns from 'train'
-                fd = train[['date', 'cci_value', 'freight_value', 'unemr_value', 'Ex_rate', 'trends', 'inflation_value']]
-
-                # Display the last few rows of the 'fd' DataFrame
-                fd.tail()
-
-                # Rename the columns in the 'train' DataFrame
-                train = train.rename(columns={'quantity_sold': 'y', 'date': 'ds'})
-
-
-                
-            
+# ----- End second part Jesus code -----        
