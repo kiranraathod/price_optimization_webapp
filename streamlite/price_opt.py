@@ -162,6 +162,18 @@ with st.form("config"):
                     st.write(list(train.columns))
                 else:
                     st.write("The 'train' DataFrame is empty or None.")
+                    
+                # Convert the 'date' column in the 'train' DataFrame to datetime format
+                train['date'] = pd.to_datetime(train['date'])
+
+                # Create a new DataFrame 'fd' by selecting specific columns from 'train'
+                fd = train[['date', 'cci_value', 'freight_value', 'unemr_value', 'Ex_rate', 'trends', 'inflation_value']]
+
+                # Display the last few rows of the 'fd' DataFrame
+                fd.tail()
+
+                # Rename the columns in the 'train' DataFrame
+                train = train.rename(columns={'quantity_sold': 'y', 'date': 'ds'})
 
 
                 
