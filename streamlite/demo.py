@@ -30,13 +30,9 @@ def prep_data(df):
     df_input['y'] = df_input['y'].astype(float)
     return df_input.copy()
 
-
-
-col1, col2 = st.columns((1.2, 5))
-col1.image("logo-color.svg", width=140)
+col1, col2 = st.columns((1.3, 5))
+col1.image("logo-no-background.svg", width=130 )
 col2.title("Price Optimization")
-
-
 st.write('This app makes it easy to optimize your prices.')
 
     # caching.clear_cache()
@@ -62,7 +58,7 @@ if input:
         columns = list(df.columns)
 
         #df = prep_data(df)
-        #output = 0
+        output = 0
 
 #---- First part Jesus code ----
 """
@@ -195,35 +191,36 @@ if st.checkbox('Chart data', key='show'):
 # ----- Second part Jesus code -----        
 st.subheader("2.Parameters configuration ")
 # Main Streamlit app code
-if __name__ == '__main__':
-        st.title("Prophet Time Series Forecasting App")
+if input is not None :
+    with st.subheader("Prophet Time Series Forecasting App"):
+       
 
-        # Selectbox to choose columns
-        selected_columns = st.multiselect("Select Regressor Columns", df.columns[3:])  # Exclude 'date' from options
+            # Selectbox to choose columns
+            selected_columns = st.multiselect("Select Regressor Columns", df.columns[3:])  # Exclude 'date' from options
 
-        # Create a train dataset
-        train = transform_1()
+            # Create a train dataset
+            train = transform_1()
 
-        # Create a second dataset to combined witht the future
-        fd = transform_2()
+            # Create a second dataset to combined witht the future
+            fd = transform_2()
 
-        # Dropdown to select the country for holidays
-        selected_country = st.selectbox("Select Country for Holidays", list(country_mapping.keys()))
+            # Dropdown to select the country for holidays
+            selected_country = st.selectbox("Select Country for Holidays", list(country_mapping.keys()))
 
-        # Dropdown to select seasonality
-        seasonality_choice = st.radio("Choose Seasonality", ["Weekly", "Monthly"])
+            # Dropdown to select seasonality
+            seasonality_choice = st.radio("Choose Seasonality", ["Weekly", "Monthly"])
 
-        # Frequency for future predictions
-        future_freq_options = ['D', 'W']  # Daily, Weekly, Monthly
-        future_freq = st.selectbox("Frequency for Future Predictions Daily, Weekly", future_freq_options)
+            # Frequency for future predictions
+            future_freq_options = ['D', 'W']  # Daily, Weekly, Monthly
+            future_freq = st.selectbox("Frequency for Future Predictions Daily, Weekly", future_freq_options)
 
-        # Number of periods for future predictions
-        future_periods = st.number_input("Number of Future Periods", value=2)
+            # Number of periods for future predictions
+            future_periods = st.number_input("Number of Future Periods", value=2)
 
-        # Load the model
-        fig = load_model(seasonality_configs[seasonality_choice], selected_columns, future_periods, future_freq, selected_country)
-        
-        # Plot the forecast
-        st.pyplot(fig)
+            # Load the model
+            fig = load_model(seasonality_configs[seasonality_choice], selected_columns, future_periods, future_freq, selected_country)
+            
+            # Plot the forecast
+            st.pyplot(fig)
 
 # ----- End second part Jesus code -----        
