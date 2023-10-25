@@ -7,7 +7,38 @@ import matplotlib.pyplot as plt
 from prophet import Prophet
 from prophet.plot import plot_plotly, plot_components_plotly
 
+from streamlit_extras.app_logo import add_logo
+
 st.set_page_config(page_title="Price Optimization App")
+
+
+
+with st.sidebar:
+    st.image('white-logo.svg',width=250)
+    
+    
+    # LinkedIn badge HTML code
+    linkedin_badge_html = """
+        [![LinkedIn](https://badgen.net/badge/Follow/LinkedIn?linkedin)](https://www.linkedin.com/company/agera-consultants/)
+        """
+
+    # Website badge HTML code
+    website_badge_html = """
+        [![Website](https://badgen.net/badge/Visit/Website?icon=globe&labelColor=green&color=47CC32)](https://ageraconsultants.com/)
+        """
+
+    # Create a column layout
+    columns = st.columns(2)
+
+    # Display the LinkedIn badge in the first column
+    columns[0].markdown(linkedin_badge_html, unsafe_allow_html=True)
+
+    # Display the Website badge in the second column
+    columns[1].markdown(website_badge_html, unsafe_allow_html=True)
+    
+   
+
+
 
 @st.cache_data()
 def load_csv(input_metric):
@@ -31,12 +62,7 @@ def prep_data(df):
     return df_input.copy()
 
 
-
-col1, col2 = st.columns((1.2, 5))
-col1.image("logo-color.svg", width=140)
-col2.title("Price Optimization")
-
-
+st.title("Price Optimization")
 st.write('This app makes it easy to optimize your prices.')
 
     # caching.clear_cache()
@@ -62,16 +88,16 @@ if input:
         columns = list(df.columns)
 
         #df = prep_data(df)
-        #output = 0
+        output = 0
 
 #---- First part Jesus code ----
-"""
+@st.cache_data  # 👈 Add the caching decorator
+def transform_1():
+    """
      In this part we are defining all the functions that would be used in the load_model() where is going to call 
     the Facebook's Prophet Algorithm, make the propert transformations and plot its own chart function to demonstrate the results
 
-"""
-@st.cache_data  # 👈 Add the caching decorator
-def transform_1():
+    """
     # Create a copy of the original DataFrame 'df' and store it in 'train'
     train = df.copy()
     
@@ -191,39 +217,49 @@ if st.checkbox('Chart data', key='show'):
 
     except Exception as e:
         st.line_chart(df['quantity_sold'], use_container_width=True, height=300)
-        
-# ----- Second part Jesus code -----        
-st.subheader("2.Parameters configuration ")
+
+st.subheader("2. Prophet Time Series Forecasting App")
+
+# Just a message that the user has to upload a file to run the forecasting app
+if input is None :
+    """
+        Waiting file 🔍
+    """
+
 # Main Streamlit app code
-if __name__ == '__main__':
-        st.title("Prophet Time Series Forecasting App")
+# Will run if the user uploads a file
+if input is not None :
+    """
+        File loaded ✅
+    """
+    # ----- Second part Jesus code -----        
+    st.caption("Parameters configuration ")
+    # Selectbox to choose columns
+    selected_columns = st.multiselect("Select Regressor Columns", df.columns[3:])  # Exclude 'date' from options
 
-        # Selectbox to choose columns
-        selected_columns = st.multiselect("Select Regressor Columns", df.columns[3:])  # Exclude 'date' from options
+    # Dropdown to select the country for holidays
+    selected_country = st.selectbox("Select Country for Holidays", list(country_mapping.keys()), index=None)
 
-        # Create a train dataset
-        train = transform_1()
+    # Dropdown to select seasonality
+    seasonality_choice = st.radio("Choose Seasonality", ["Weekly", "Monthly"])
 
-        # Create a second dataset to combined witht the future
-        fd = transform_2()
+    # Frequency for future predictions
+    future_freq_options = ['D', 'W']  # Daily, Weekly, Monthly
+    future_freq = st.selectbox("Frequency for Future Predictions Daily, Weekly", future_freq_options, index=None)
 
-        # Dropdown to select the country for holidays
-        selected_country = st.selectbox("Select Country for Holidays", list(country_mapping.keys()))
+    # Number of periods for future predictions
+    future_periods = st.number_input("Number of Future Periods", value=2)
 
-        # Dropdown to select seasonality
-        seasonality_choice = st.radio("Choose Seasonality", ["Weekly", "Monthly"])
+    # Create a train dataset
+    train = transform_1()
 
-        # Frequency for future predictions
-        future_freq_options = ['D', 'W']  # Daily, Weekly, Monthly
-        future_freq = st.selectbox("Frequency for Future Predictions Daily, Weekly", future_freq_options)
+    # Create a second dataset to combined witht the future
+    fd = transform_2()
 
-        # Number of periods for future predictions
-        future_periods = st.number_input("Number of Future Periods", value=2)
-
-        # Load the model
-        fig = load_model(seasonality_configs[seasonality_choice], selected_columns, future_periods, future_freq, selected_country)
-        
-        # Plot the forecast
-        st.pyplot(fig)
+    # Load the model
+    fig = load_model(seasonality_configs[seasonality_choice], selected_columns, future_periods, future_freq, selected_country)
+            
+    # Plot the forecast
+    st.pyplot(fig)
 
 # ----- End second part Jesus code -----        
