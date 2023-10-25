@@ -17,24 +17,32 @@ with st.sidebar:
     st.image('white-logo.svg',width=250)
     
     
-    # LinkedIn badge HTML code
+        # LinkedIn badge HTML code
     linkedin_badge_html = """
-        [![LinkedIn](https://badgen.net/badge/Follow/LinkedIn?linkedin)](https://www.linkedin.com/company/agera-consultants/)
-        """
+        <a href="https://www.linkedin.com/company/agera-consultants/" target="_blank" rel="noopener noreferrer">
+            <img src="https://badgen.net/badge/Follow/LinkedIn?linkedin" alt="LinkedIn Badge">
+        </a>
+    """
 
     # Website badge HTML code
     website_badge_html = """
-        [![Website](https://badgen.net/badge/Visit/Website?icon=globe&labelColor=green&color=47CC32)](https://ageraconsultants.com/)
-        """
+        <a href="https://ageraconsultants.com/" target="_blank" rel="noopener noreferrer">
+            <img src="https://badgen.net/badge/Visit/Website?icon=globe&labelColor=green&color=47CC32" alt="Website Badge">
+        </a>
+    """
 
     # Create a column layout
     columns = st.columns(2)
 
     # Display the LinkedIn badge in the first column
-    columns[0].markdown(linkedin_badge_html, unsafe_allow_html=True)
+    with columns[0]:
+        st.markdown(linkedin_badge_html, unsafe_allow_html=True)
+        st.markdown("<style>img {width: 100%;}</style>", unsafe_allow_html=True)
 
-    # Display the Website badge in the second column
-    columns[1].markdown(website_badge_html, unsafe_allow_html=True)
+# Display the Website badge in the second column
+with columns[1]:
+    st.markdown(website_badge_html, unsafe_allow_html=True)
+    st.markdown("<style>img {width: 100%;}</style>", unsafe_allow_html=True)
     
    
 
