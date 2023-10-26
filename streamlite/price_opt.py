@@ -14,6 +14,8 @@ with open('style.css') as f:
 
 #st.set_page_config(page_title="Price Optimization App")
 
+# Merge well
+
 with st.sidebar:
     st.image('white-logo.svg',width=250)
     
