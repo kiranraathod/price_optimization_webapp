@@ -9,31 +9,53 @@ from prophet.plot import plot_plotly, plot_components_plotly
 
 from streamlit_extras.app_logo import add_logo
 
-st.set_page_config(page_title="Price Optimization App")
+with open('style.css') as f:
+   st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-
+#st.set_page_config(page_title="Price Optimization App")
 
 with st.sidebar:
     st.image('white-logo.svg',width=250)
     
     
+<<<<<<< HEAD
       # LinkedIn badge HTML code
     linkedin_badge_html = """
     [![LinkedIn](https://badgen.net/badge/Follow/LinkedIn?linkedin)](https://www.linkedin.com/company/agera-consultants/)
     """
+=======
+    # LinkedIn badge HTML code
+    linkedin_badge_html = """
+        [![LinkedIn](https://badgen.net/badge/Visit/LinkedIn?icon=linkedin&labelColor=2d3136&color=0077B5)](https://www.linkedin.com/company/agera-consultants/)
+        """
+>>>>>>> 3e0958ce6b2a3eb21882e12a28b22f3466b3b8fe
 
     # Display the LinkedIn badge
     st.markdown(linkedin_badge_html, unsafe_allow_html=True)
 
     # LinkedIn badge HTML code
     website_badge_html = """
+<<<<<<< HEAD
     [![Website](https://badgen.net/badge/Visit/Website?icon=globe&labelColor=green&color=47CC32)](https://ageraconsultants.com/)
     """
 
     # Display the LinkedIn badge
     st.markdown(website_badge_html, unsafe_allow_html=True)
    
+=======
+        [![Website](https://badgen.net/badge/Visit/Website?icon=globe&labelColor=2d3136&color=47CC32)](https://ageraconsultants.com/)
+        """
 
+
+    # Create a column layout
+    columns = st.columns(2)
+
+    # Display the LinkedIn badge in the first column
+    columns[0].markdown(linkedin_badge_html, unsafe_allow_html=True)
+>>>>>>> 3e0958ce6b2a3eb21882e12a28b22f3466b3b8fe
+
+    # Display the Website badge in the second column
+    columns[1].markdown(website_badge_html, unsafe_allow_html=True)
 
 
 @st.cache_data()
