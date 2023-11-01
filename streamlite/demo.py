@@ -31,7 +31,7 @@ def prep_data(df):
     return df_input.copy()
 
 col1, col2 = st.columns((1.3, 5))
-col1.image("logo-no-background.svg", width=130 )
+col1.image("white-logo.svg", width=130 )
 col2.title("Price Optimization")
 st.write('This app makes it easy to optimize your prices.')
 
@@ -171,11 +171,11 @@ if st.checkbox('Chart data', key='show'):
     with st.spinner('Plotting data..'):
         col1, col2 = st.columns(2)
         with col1:
-            st.dataframe(df)
+            st.dataframe(df, height=400, width=600)  # Set your desired height and width
 
         with col2:
             st.write("Dataframe description:")
-            st.write(df.describe())
+            st.write(df.describe(), width=400)  # Set your desired width
 
     try:
         line_chart = alt.Chart(df).mark_line().encode(
@@ -184,9 +184,9 @@ if st.checkbox('Chart data', key='show'):
             tooltip=['ds:T', 'y']
         ).properties(title="Time series preview").interactive()
         st.altair_chart(line_chart, use_container_width=True)
-
     except Exception as e:
         st.line_chart(df['quantity_sold'], use_container_width=True, height=300)
+
 
 st.subheader("2. Prophet Time Series Forecasting App")
 

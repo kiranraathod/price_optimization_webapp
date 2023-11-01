@@ -7,39 +7,30 @@ import matplotlib.pyplot as plt
 from prophet import Prophet
 from prophet.plot import plot_plotly, plot_components_plotly
 
-from streamlit_extras.app_logo import add_logo
-
-with open('style.css') as f:
-   st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 #st.set_page_config(page_title="Price Optimization App")
 
 # Merge well 
 
 with st.sidebar:
-    st.image('white-logo.svg',width=250)
-    
-    
+    st.image('white-logo.svg', width=250)
+ 
+    # Create two columns
+    col0, col1 = st.columns(2, gap="small")
+
     # LinkedIn badge HTML code
     linkedin_badge_html = """
-        [![LinkedIn](https://badgen.net/badge/Visit/LinkedIn?icon=linkedin&labelColor=2d3136&color=0077B5)](https://www.linkedin.com/company/agera-consultants/)
-        """
+    [![LinkedIn](https://badgen.net/badge/Visit/LinkedIn?icon=linkedin&labelColor=2d3136&color=0077B5)](https://www.linkedin.com/company/agera-consultants/)
+    """
+    col0.markdown(linkedin_badge_html, unsafe_allow_html=True)
 
     # Website badge HTML code
     website_badge_html = """
-        [![Website](https://badgen.net/badge/Visit/Website?icon=globe&labelColor=2d3136&color=47CC32)](https://ageraconsultants.com/)
-        """
+    [![Website](https://badgen.net/badge/Visit/Website?icon=globe&labelColor=2d3136&color=47CC32)](https://ageraconsultants.com/)
+    """
+    col1.markdown(website_badge_html, unsafe_allow_html=True)
 
-
-    # Create a column layout
-    columns = st.columns(2)
-
-    # Display the LinkedIn badge in the first column
-    columns[0].markdown(linkedin_badge_html, unsafe_allow_html=True)
-
-    # Display the Website badge in the second column
-    columns[1].markdown(website_badge_html, unsafe_allow_html=True)
-
+ 
 
 @st.cache_data()
 def load_csv(input_metric):
@@ -199,25 +190,31 @@ def load_model(seasonality_config, selected_columns, future_periods, future_freq
 
 
 if st.checkbox('Chart data', key='show'):
-    with st.spinner('Plotting data..'):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.dataframe(df)
+    uploaded_data = st.file_uploader("Upload your data", type=["csv", "xlsx"])
+    
+    if uploaded_data is not None:
+        df = pd.read_csv(uploaded_data)  # Assuming you're using pandas to read data
+        with st.spinner('Plotting data..'):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.dataframe(df)
 
-        with col2:
-            st.write("Dataframe description:")
-            st.write(df.describe())
+            with col2:
+                st.write("Dataframe description:")
+                st.write(df.describe())
 
-    try:
-        line_chart = alt.Chart(df).mark_line().encode(
-            x=alt.X('ds:T', title='Date'),
-            y=alt.Y('y:Q', title='Target'),
-            tooltip=['ds:T', 'y']
-        ).properties(title="Time series preview").interactive()
-        st.altair_chart(line_chart, use_container_width=True)
+        try:
+            line_chart = alt.Chart(df).mark_line().encode(
+                x=alt.X('ds:T', title='Date'),
+                y=alt.Y('y:Q', title='Target'),
+                tooltip=['ds:T', 'y']
+            ).properties(title="Time series preview").interactive()
+            st.altair_chart(line_chart, use_container_width=True)
+        except Exception as e:
+            st.line_chart(df['quantity_sold'], use_container_width=True, height=300)
+    else:
+        st.warning("Please upload data to display the chart.")
 
-    except Exception as e:
-        st.line_chart(df['quantity_sold'], use_container_width=True, height=300)
 
 st.subheader("2. Prophet Time Series Forecasting App")
 
