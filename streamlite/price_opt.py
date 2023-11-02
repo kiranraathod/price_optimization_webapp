@@ -79,8 +79,32 @@ if input:
         st.write(list(df.columns))
         columns = list(df.columns)
 
-        #df = prep_data(df)
+        # df = prep_data(df)
         output = 0
+
+    if st.checkbox('Chart data', key='show'):
+        with st.spinner('Plotting data..'):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.dataframe(df)
+
+            with col2:
+                st.write("Dataframe description:")
+                st.write(df.describe())
+
+        try:
+            line_chart = alt.Chart(df).mark_line().encode(
+                x=alt.X('ds:T', title='Date'),
+                y=alt.Y('y:Q', title='Target'),
+                tooltip=['ds:T', 'y']
+            ).properties(title="Time series preview").interactive()
+            st.altair_chart(line_chart, use_container_width=True)
+
+        except Exception as e:
+            st.line_chart(df['quantity_sold'], use_container_width=True, height=300)
+else:
+    st.warning("Please upload data.")
+
 
 #---- First part Jesus code ----
 @st.cache_data  # 👈 Add the caching decorator
@@ -187,34 +211,6 @@ def load_model(seasonality_config, selected_columns, future_periods, future_freq
     return fig
 
 #----End first part Jesus Code-----
-
-
-if st.checkbox('Chart data', key='show'):
-    uploaded_data = st.file_uploader("Upload your data", type=["csv", "xlsx"])
-    
-    if uploaded_data is not None:
-        df = pd.read_csv(uploaded_data)  # Assuming you're using pandas to read data
-        with st.spinner('Plotting data..'):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.dataframe(df)
-
-            with col2:
-                st.write("Dataframe description:")
-                st.write(df.describe())
-
-        try:
-            line_chart = alt.Chart(df).mark_line().encode(
-                x=alt.X('ds:T', title='Date'),
-                y=alt.Y('y:Q', title='Target'),
-                tooltip=['ds:T', 'y']
-            ).properties(title="Time series preview").interactive()
-            st.altair_chart(line_chart, use_container_width=True)
-        except Exception as e:
-            st.line_chart(df['quantity_sold'], use_container_width=True, height=300)
-    else:
-        st.warning("Please upload data to display the chart.")
-
 
 st.subheader("2. Prophet Time Series Forecasting App")
 
