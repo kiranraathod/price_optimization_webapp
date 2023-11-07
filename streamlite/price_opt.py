@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as fig
+import plotly.graph_objects as go
 # To build our model
 from prophet import Prophet
 from prophet.plot import plot_plotly, plot_components_plotly
@@ -51,8 +52,9 @@ def prep_data(df):
     df_input = df_input.sort_values(by='ds', ascending=True)
     df_input['ds'] = pd.to_datetime(df_input['ds'])
     df_input['y'] = df_input['y'].astype(float)
-    return df_input.copy()
+    return df_input.copy()   
 
+# Getting the last date of the dataset
 
 st.title("Price Optimization")
 st.write('This app makes it easy to optimize your prices.')
@@ -135,6 +137,11 @@ def transform_2():
 
     return fd
 
+# Let's get the last date of fd
+def get_last_date(fd):
+    last_date = fd['date'].max()
+    return last_date
+
 def preprocess_data(df):
     # With this function we are going to fill the future dates witht our latest value of the other features. (Those features are required to predict the target value)
     df = df[['ds'] + selected_columns]
@@ -146,6 +153,32 @@ def create_future_dataframe(model, periods=4, freq='W'):
     future_data = model.make_future_dataframe(periods=periods, freq=freq)
     future_data['ds'] = future_data['ds'].dt.strftime('%Y-%m-%d')
     return future_data
+
+def plot_the_forecast(df):
+    # Convert the 'ds' column to a datetime object if it's not already in datetime format
+    df['ds'] = pd.to_datetime(df['ds'])
+
+    # Split the DataFrame into two parts: before and after '2018-05-13'
+    past_data = df[df['ds'] <= last_date]
+    future_data = df[df['ds'] >= last_date]
+
+    # Create a Plotly figure
+    fig = go.Figure()
+
+    # Plot past data in grey
+    fig.add_trace(go.Scatter(x=past_data['ds'], y=past_data['yhat'], name='Past Data - Target values', line=dict(color='grey')))
+    fig.add_trace(go.Scatter(x=past_data['ds'], y=past_data['yhat_lower'], fill='tonexty', showlegend=False, line=dict(color='slategray'), fillcolor='rgba(211, 211, 211, 0.1)'))
+    fig.add_trace(go.Scatter(x=past_data['ds'], y=past_data['yhat_upper'], fill='tonexty', showlegend=False, line=dict(color='grey'), fillcolor='rgba(211, 211, 211, 0.1)'))
+
+    # Plot future data as lines with the area filled between 'yhat_lower' and 'yhat_upper'
+    fig.add_trace(go.Scatter(x=future_data['ds'], y=future_data['yhat'], name='Predicted Data - Target values', line=dict(color='steelblue'), mode='lines'))
+    fig.add_trace(go.Scatter(x=future_data['ds'], y=future_data['yhat_lower'], showlegend=False, fill='tonexty', fillcolor='rgba(70, 130, 180, 0.1)', line=dict(color='steelblue'), mode='lines'))
+    fig.add_trace(go.Scatter(x=future_data['ds'], y=future_data['yhat_upper'], showlegend=False, fill='tonexty', fillcolor='rgba(70, 130, 180, 0.1)', line=dict(color='steelblue'), mode='lines'))
+
+    # Customize the chart layout
+    fig.update_layout(title='Forecasted Data', xaxis_title='Date', yaxis_title='Values', showlegend=True, legend=dict(orientation='h', y=1.1, x=0.2))
+
+    return st.plotly_chart(fig)
 
 # Creating a list of countries that Prophet know their holidays 
 country_mapping = {
@@ -160,6 +193,9 @@ seasonality_configs = {
         "Weekly": {"name": "weekly", "period": 7, "fourier_order": 3},
         "Monthly": {"name": "monthly", "period": 30.5, "fourier_order": 5}
     }
+
+
+st.set_option('deprecation.showPyplotGlobalUse', False)
 
 @st.cache_data  # 👈 Add the caching decorator
 def load_model(seasonality_config, selected_columns, future_periods, future_freq, selected_country):
@@ -191,24 +227,18 @@ def load_model(seasonality_config, selected_columns, future_periods, future_freq
     
     # Bring back the base data set to concatenate with the future dataset
     fd = transform_2()
-    
+
     # Let's merge our future data with our features
     combined_df = pd.concat([fd, future_data], axis=1)
     combined_df = preprocess_data(combined_df)
 
     # Predict on the 'future' dataset
     forecast_data = model_new.predict(combined_df)
-    
-    fig = model_new.plot(forecast_data)
-    
-    # Customize x-label and y-label
-    plt.xlabel('Date')
-    plt.ylabel('Target value')
-    plt.grid(False)
-    plt.gca().spines['right'].set_visible(False)
-    plt.gca().spines['top'].set_visible(False)
 
-    return fig
+    # Print the right columns
+    df = forecast_data[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+
+    return df
 
 #----End first part Jesus Code-----
 
@@ -250,10 +280,13 @@ if input is not None :
     # Create a second dataset to combined witht the future
     fd = transform_2()
 
+    # Last date
+    last_date = get_last_date(fd)
+
     # Load the model
-    fig = load_model(seasonality_configs[seasonality_choice], selected_columns, future_periods, future_freq, selected_country)
+    dataframe = load_model(seasonality_configs[seasonality_choice], selected_columns, future_periods, future_freq, selected_country)
             
     # Plot the forecast
-    st.pyplot(fig)
+    plot_the_forecast(dataframe)
 
 # ----- End second part Jesus code -----        
