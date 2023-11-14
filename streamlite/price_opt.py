@@ -135,6 +135,9 @@ def transform_2():
     # Create a new DataFrame 'fd' by selecting specific columns from 'train'
     fd = train[['date', 'quantity_sold'] + selected_columns]
 
+    # Rename the columns in the 'train' DataFrame
+    #fd = fd.rename(columns={'quantity_sold': 'y', 'date': 'ds'})
+
     return fd
 
 # Let's get the last date of fd
@@ -146,6 +149,8 @@ def preprocess_data(df):
     # With this function we are going to fill the future dates witht our latest value of the other features. (Those features are required to predict the target value)
     df = df[['ds'] + selected_columns]
     df.fillna(method='ffill', inplace=True)
+    df['ds'] = pd.to_datetime(df['ds'])
+    #df['ds'] = df['ds'].dt.strftime('%Y-%m-%d')
     return df
 
 def create_future_dataframe(model, periods=4, freq='W'):
@@ -269,6 +274,7 @@ if input is not None :
 
     # Frequency for future predictions
     future_freq_options = ['D', 'W']  # Daily, Weekly, Monthly
+    
     future_freq = st.selectbox("Frequency for Future Predictions Daily, Weekly", future_freq_options, index=None)
 
     # Number of periods for future predictions
