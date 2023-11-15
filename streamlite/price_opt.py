@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import altair as alt
 import matplotlib.pyplot as fig
-import plotly.graph_objects as go
+from plotly import graph_objs as go
 # To build our model
 from prophet import Prophet
 from prophet.plot import plot_plotly, plot_components_plotly
