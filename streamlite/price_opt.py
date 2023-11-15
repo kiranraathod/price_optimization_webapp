@@ -106,7 +106,7 @@ else:
 
 
 #---- First part Jesus code ----
-@st.cache_data  # 👈 Add the caching decorator
+
 def transform_1():
     """
      In this part we are defining all the functions that would be used in the load_model() where is going to call 
@@ -199,7 +199,7 @@ seasonality_configs = {
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-@st.cache_data  # 👈 Add the caching decorator
+
 def load_model(seasonality_config, selected_columns, future_periods, future_freq, selected_country):
     # Instantiate Prophet
     model_new = Prophet()
