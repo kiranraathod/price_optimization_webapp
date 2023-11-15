@@ -66,7 +66,7 @@ with st.expander("Data format"):
         st.write("For example, see this table format.")
         example_df = pd.read_csv('streamlite/w_data.csv')
         st.write(example_df.head())
-        st.image('input_format.png', caption='Data Format Example', use_column_width=True)
+        st.image('streamlite/input_format.png', caption='Data Format Example', use_column_width=True)
 
 input = st.file_uploader('')
 
