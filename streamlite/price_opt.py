@@ -11,7 +11,7 @@ from prophet.plot import plot_plotly, plot_components_plotly
 # Merge well 
 
 with st.sidebar:
-    st.image('white-logo.svg', width=250)
+    st.image('streamlite/white-logo.svg', width=250)
  
     # Create two columns
     col0, col1 = st.columns(2, gap="small")
@@ -64,9 +64,9 @@ st.write("Import a time series csv file.")
 with st.expander("Data format"):
         st.markdown("The dataset can contain multiple columns, but you will need to select a column to be used as dates and a second column containing the metric you wish to forecast. The columns will be renamed as **ds** and **y** to be compliant with Prophet. Even though we are using the default Pandas date parser, the ds (datestamp) column should be of a format expected by Pandas, ideally `YYYY-MM-DD` for a date or `YYYY-MM-DD HH:MM:SS` for a timestamp. The y column must be numeric.")
         st.write("For example, see this table format.")
-        example_df = pd.read_csv('w_data.csv')
+        example_df = pd.read_csv('streamlite/w_data.csv')
         st.write(example_df.head())
-        st.image('input_format.png', caption='Data Format Example', use_column_width=True)
+        st.image('streamlite/input_format.png', caption='Data Format Example', use_column_width=True)
 
 input = st.file_uploader('')
 
