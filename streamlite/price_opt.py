@@ -11,7 +11,7 @@ from prophet.plot import plot_plotly, plot_components_plotly
 # Merge well 
 
 with st.sidebar:
-    st.image('white-logo.svg', width=250)
+    st.image('streamlite/white-logo.svg', width=250)
  
     # Create two columns
     col0, col1 = st.columns(2, gap="small")
