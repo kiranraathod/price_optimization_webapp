@@ -8,9 +8,6 @@ from plotly import graph_objs as go
 from prophet import Prophet
 from prophet.plot import plot_plotly, plot_components_plotly
 
-
-#st.set_page_config(page_title="Price Optimization App")
-
 # Merge well 
 
 with st.sidebar:
