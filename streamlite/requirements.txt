@@ -8,5 +8,5 @@ tqdm
 prophet
 xgboost
 altair
-plotly==5.0.0
-plotly.graph_objects
+plotly==3.1.0
+pip==23.3.1
